@@ -44,20 +44,26 @@ func main() {
     var ch chan int
     ch = make(chan int)
 
-    go func(ch chan int) {
-        client := &http.Client{}
-        if resp, err := client.Get(surl); err != nil {
-            log.Errorf("%s", err)
-            ch <- -1
-        } else {
-            if resp.StatusCode == 200 {
-                ch <- 1
+    for i := 0; i < goroutines; i++ {
+        log.Infof("starting goroutine %d", i+1)
+        go func(ch chan int) {
+            client := &http.Client{}
+            if resp, err := client.Get(surl); err != nil {
+                log.Errorf("%s", err)
+                ch <- -1
             } else {
-                ch <- 0
+                if resp.StatusCode == 200 {
+                    ch <- 1
+                } else {
+                    ch <- 0
+                }
             }
-        }
-    }(ch)
+        }(ch)
+    }
 
-    rv := <- ch
-    log.Infof("return %d", rv)
+    for i := 0; i < goroutines; i++ {
+        rv := <- ch
+        log.Infof("return %d - %d goroutines to go",
+            rv, goroutines - (i+1))
+    }
 }
