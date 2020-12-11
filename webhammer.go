@@ -14,6 +14,7 @@ var (
     waittime = 0
     surl = ""
     goroutines = 1
+    pause = 0
 )
 
 func init() {
@@ -21,7 +22,13 @@ func init() {
     flag.IntVar(&waittime, "w", 0, "Wait time")
     flag.StringVar(&surl, "u", "", "URL to hammer")
     flag.IntVar(&goroutines, "g", 1, "Number of goroutines to maintain")
+    flag.IntVar(&pause, "p", 100, "Number of milliseconds to pause between starting goroutines")
     flag.Parse()
+
+    if surl == "" {
+        flag.PrintDefaults()
+        os.Exit(1)
+    }
 
     format := logging.MustStringFormatter(
         `%{time:2006-01-02 15:04:05.000-0700} %{level} [%{shortfile}] %{message}`,
@@ -62,6 +69,9 @@ func main() {
                 }
             }
         }(ch)
+        if pause > 0.0 {
+            time.Sleep(time.Millisecond*time.Duration(pause))
+        }
     }
 
     for i := 0; i < goroutines; i++ {
