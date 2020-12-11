@@ -5,6 +5,7 @@ import (
     "flag"
     "os"
     "net/http"
+    "time"
 )
 
 var (
@@ -47,7 +48,9 @@ func main() {
     for i := 0; i < goroutines; i++ {
         log.Infof("starting goroutine %d", i+1)
         go func(ch chan int) {
-            client := &http.Client{}
+            client := &http.Client{
+                Timeout: time.Second*time.Duration(waittime),
+            }
             if resp, err := client.Get(surl); err != nil {
                 log.Errorf("%s", err)
                 ch <- -1
