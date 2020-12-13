@@ -62,6 +62,7 @@ func main() {
                 log.Errorf("%s", err)
                 ch <- -1
             } else {
+                defer resp.Body.Close()
                 if resp.StatusCode == 200 {
                     ch <- 1
                 } else {
