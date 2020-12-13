@@ -6,6 +6,7 @@ import (
     "os"
     "net/http"
     "time"
+    "crypto/tls"
 )
 
 var (
@@ -15,9 +16,11 @@ var (
     surl = ""
     goroutines = 1
     pause = 0
+    disable_tls_validation = false
 )
 
 func init() {
+    flag.BoolVar(&disable_tls_validation, "k", false, "Disable TLS validation")
     flag.BoolVar(&debug, "d", false, "Debug logging")
     flag.IntVar(&waittime, "w", 0, "Wait time")
     flag.StringVar(&surl, "u", "", "URL to hammer")
@@ -55,8 +58,19 @@ func main() {
     for i := 0; i < goroutines; i++ {
         log.Infof("starting goroutine %d", i+1)
         go func(ch chan int) {
-            client := &http.Client{
-                Timeout: time.Second*time.Duration(waittime),
+            client := &http.Client{}
+            if disable_tls_validation {
+                tr := &http.Transport{
+                        TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+                    }
+                client = &http.Client{
+                    Transport: tr,
+                    Timeout: time.Second*time.Duration(waittime),
+                }
+            } else {
+                client = &http.Client{
+                    Timeout: time.Second*time.Duration(waittime),
+                }
             }
             if resp, err := client.Get(surl); err != nil {
                 log.Errorf("%s", err)
